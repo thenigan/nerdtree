@@ -58,6 +58,7 @@ call s:initVariable("g:NERDTreeBookmarksFile", expand('$HOME') . '/.NERDTreeBook
 call s:initVariable("g:NERDTreeHighlightCursorline", 1)
 call s:initVariable("g:NERDTreeHijackNetrw", 1)
 call s:initVariable("g:NERDTreeKeepFocus", 0)
+call s:initVariable("g:NERDTreeKeepTree", 0)
 call s:initVariable("g:NERDTreeMouseMode", 1)
 call s:initVariable("g:NERDTreeNotificationThreshold", 100)
 call s:initVariable("g:NERDTreeQuitOnOpen", 0)
@@ -136,6 +137,7 @@ call s:initVariable("g:NERDTreeMapToggleFiles", "F")
 call s:initVariable("g:NERDTreeMapToggleFilters", "f")
 call s:initVariable("g:NERDTreeMapToggleHidden", "I")
 call s:initVariable("g:NERDTreeMapToggleKeepFocus", "k")
+call s:initVariable("g:NERDTreeMapToggleKeepTree", "<C-t>")
 call s:initVariable("g:NERDTreeMapToggleZoom", "A")
 call s:initVariable("g:NERDTreeMapUpdir", "u")
 call s:initVariable("g:NERDTreeMapUpdirKeepOpen", "U")
@@ -392,6 +394,9 @@ function! s:Bookmark.openInNewTab(options)
         call s:initNerdTree(self.name)
     else
         exec "tabedit " . bookmark.path.str({'format': 'Edit'})
+        if g:NERDTreeKeepTree ==# 1
+            exec "NERDTree"
+        endif
     endif
 
     if has_key(a:options, 'stayInCurrentTab')
@@ -1231,6 +1236,10 @@ function! s:TreeFileNode.openInNewTab(options)
     endif
 
     exec "tabedit " . self.path.str({'format': 'Edit'})
+
+    if g:NERDTreeKeepTree ==# 1
+        exec "NERDTree"
+    endif
 
     if has_key(a:options, 'stayInCurrentTab') && a:options['stayInCurrentTab']
         exec "tabnext " . currentTab
@@ -2904,6 +2913,7 @@ function! s:dumpHelp()
         endif
         let @h=@h."\" ". g:NERDTreeMapOpenInTab.": open in new tab\n"
         let @h=@h."\" ". g:NERDTreeMapOpenInTabSilent .": open in new tab silently\n"
+        let @h=@h."\" ". g:NERDTreeMapToggleKeepTree .": open NERDTree in new tab (" . (g:NERDTreeKeepTree ? "on" : "off") . ")\n"
         let @h=@h."\" middle-click,\n"
         let @h=@h."\" ". g:NERDTreeMapOpenSplit .": open split\n"
         let @h=@h."\" ". g:NERDTreeMapPreviewSplit .": preview split\n"
@@ -3583,6 +3593,7 @@ function! s:bindMappings()
 
     exec "nnoremap <silent> <buffer> ". g:NERDTreeMapDeleteBookmark ." :call <SID>deleteBookmark()<cr>"
     exec "nnoremap <silent> <buffer> ". g:NERDTreeMapToggleKeepFocus  ." :call <SID>toggleKeepFocus()<cr>"
+    exec "nnoremap <silent> <buffer> ". g:NERDTreeMapToggleKeepTree  ." :call <SID>toggleKeepTree()<cr>"
 
     "bind all the user custom maps
     call s:KeyMap.BindAll()
@@ -4008,6 +4019,14 @@ endfunction
 " opening a file
 function! s:toggleKeepFocus()
     let g:NERDTreeKeepFocus = !g:NERDTreeKeepFocus
+    call s:renderViewSavingPosition()
+    call s:centerView()
+endfunction
+
+" FUNCTION: s:toggleKeepTree() {{{2
+" toggles the variable which controls if NERDTree is opened in new tabs
+function! s:toggleKeepTree()
+    let g:NERDTreeKeepTree = !g:NERDTreeKeepTree
     call s:renderViewSavingPosition()
     call s:centerView()
 endfunction
