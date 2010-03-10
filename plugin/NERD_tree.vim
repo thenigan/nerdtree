@@ -2,7 +2,7 @@
 " File:        NERD_tree.vim
 " Description: vim global plugin that provides a nice tree explorer
 " Maintainer:  Martin Grenfell <martin.grenfell at gmail dot com>
-" Last Change: 1 December, 2009
+" Last Change: 9 March, 2010
 " License:     This program is free software. It comes without any warranty,
 "              to the extent permitted by applicable law. You can redistribute
 "              it and/or modify it under the terms of the Do What The Fuck You
@@ -10,7 +10,7 @@
 "              See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 " ============================================================================
-let s:NERD_tree_version = '4.1.0'
+let s:NERD_tree_version = '4.1.0+'
 
 " SECTION: Script init stuff {{{1
 "============================================================
@@ -57,6 +57,7 @@ endif
 call s:initVariable("g:NERDTreeBookmarksFile", expand('$HOME') . '/.NERDTreeBookmarks')
 call s:initVariable("g:NERDTreeHighlightCursorline", 1)
 call s:initVariable("g:NERDTreeHijackNetrw", 1)
+call s:initVariable("g:NERDTreeKeepFocus", 0)
 call s:initVariable("g:NERDTreeMouseMode", 1)
 call s:initVariable("g:NERDTreeNotificationThreshold", 100)
 call s:initVariable("g:NERDTreeQuitOnOpen", 0)
@@ -134,6 +135,7 @@ call s:initVariable("g:NERDTreeMapToggleBookmarks", "B")
 call s:initVariable("g:NERDTreeMapToggleFiles", "F")
 call s:initVariable("g:NERDTreeMapToggleFilters", "f")
 call s:initVariable("g:NERDTreeMapToggleHidden", "I")
+call s:initVariable("g:NERDTreeMapToggleKeepFocus", "k")
 call s:initVariable("g:NERDTreeMapToggleZoom", "A")
 call s:initVariable("g:NERDTreeMapUpdir", "u")
 call s:initVariable("g:NERDTreeMapUpdirKeepOpen", "U")
@@ -2970,6 +2972,7 @@ function! s:dumpHelp()
         let @h=@h."\" ". g:NERDTreeMapQuit .": Close the NERDTree window\n"
         let @h=@h."\" ". g:NERDTreeMapToggleZoom .": Zoom (maximize-minimize)\n"
         let @h=@h."\"    the NERDTree window\n"
+        let @h=@h."\" ". g:NERDTreeMapToggleKeepFocus .": Keeps focus after open (" . (g:NERDTreeKeepFocus ? "on" : "off") . ")\n"
         let @h=@h."\" ". g:NERDTreeMapHelp .": toggle help\n"
         let @h=@h."\"\n\" ----------------------------\n"
         let @h=@h."\" Bookmark commands~\n"
@@ -3518,6 +3521,10 @@ function! s:activateNode(forceKeepWindowOpen)
             call bookmark.activate()
         endif
     endif
+
+    if g:NERDTreeKeepFocus ==# 1
+        call s:exec(s:getTreeWinNum() . " wincmd w")
+    endif
 endfunction
 
 "FUNCTION: s:bindMappings() {{{2
@@ -3575,6 +3582,7 @@ function! s:bindMappings()
     exec "nnoremap <silent> <buffer> ". g:NERDTreeMapOpenExpl ." :call <SID>openExplorer()<cr>"
 
     exec "nnoremap <silent> <buffer> ". g:NERDTreeMapDeleteBookmark ." :call <SID>deleteBookmark()<cr>"
+    exec "nnoremap <silent> <buffer> ". g:NERDTreeMapToggleKeepFocus  ." :call <SID>toggleKeepFocus()<cr>"
 
     "bind all the user custom maps
     call s:KeyMap.BindAll()
@@ -3991,6 +3999,15 @@ endfunction
 " toggles the display of hidden files
 function! s:toggleShowFiles()
     let b:NERDTreeShowFiles = !b:NERDTreeShowFiles
+    call s:renderViewSavingPosition()
+    call s:centerView()
+endfunction
+
+" FUNCTION: s:toggleKeepFocus() {{{2
+" toggles the variable which controls if NERDTree keeps the focus after
+" opening a file
+function! s:toggleKeepFocus()
+    let g:NERDTreeKeepFocus = !g:NERDTreeKeepFocus
     call s:renderViewSavingPosition()
     call s:centerView()
 endfunction
